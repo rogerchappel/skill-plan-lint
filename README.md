@@ -16,6 +16,21 @@ npm run smoke
 node src/cli.js check fixtures/good-skill.md --markdown
 ```
 
+After installing the package, the same check is available through the bin:
+
+```bash
+skill-plan-lint check SKILL.md --markdown
+skill-plan-lint --help
+```
+
+## Verify
+
+Run the release-readiness check before publishing or tagging:
+
+```bash
+npm run release:check
+```
+
 ## Agent Skill
 
 See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries, approval requirements, examples, and validation.

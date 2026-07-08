@@ -8,6 +8,10 @@ function files(input) {
   return [input];
 }
 const [cmd = 'check', target = 'SKILL.md', ...rest] = process.argv.slice(2);
+if (cmd === '--help' || cmd === '-h') {
+  console.log('Usage: skill-plan-lint check <path> [--markdown]');
+  process.exit(0);
+}
 const markdown = rest.includes('--format=markdown') || rest.includes('--markdown');
 if (!['check', 'report'].includes(cmd)) { console.error('Usage: skill-plan-lint check <path> [--markdown]'); process.exit(2); }
 const reports = files(target).map((file) => analyzeSkill(fs.readFileSync(file, 'utf8'), file));
