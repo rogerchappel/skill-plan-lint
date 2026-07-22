@@ -17,4 +17,4 @@ if (!['check', 'report'].includes(cmd)) { console.error('Usage: skill-plan-lint 
 const reports = files(target).map((file) => analyzeSkill(fs.readFileSync(file, 'utf8'), file));
 if (markdown || cmd === 'report') console.log(reports.map(renderMarkdown).join('\n'));
 else console.log(JSON.stringify(reports.length === 1 ? reports[0] : reports, null, 2));
-if (cmd === 'check' && reports.some((report) => report.score < 60)) process.exit(1);
+if (cmd === 'check' && reports.some((report) => report.status === 'revise')) process.exit(1);
