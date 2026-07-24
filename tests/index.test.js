@@ -39,3 +39,29 @@ test('rejects common approval negations while preserving affirmative requirement
     assert.equal(report.checks.find((check) => check.id === 'approval').passed, true, statement);
   }
 });
+
+test('requires approval for live external communication actions', () => {
+  const actions = [
+    'It may send a live customer email.',
+    'It publishes a release announcement.',
+    'It can post a message to the customer channel.'
+  ];
+
+  for (const action of actions) {
+    const completeWithoutApproval = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+      .replace('Approval is required before applying or rejecting a proposal.', 'No approval is required.')
+      .concat(`\n${action}\n`);
+    const report = analyzeSkill(completeWithoutApproval);
+
+    assert.equal(report.score, 85, action);
+    assert.equal(report.status, 'revise', action);
+  }
+});
+
+test('does not treat explicitly prohibited external actions as side effects', () => {
+  const localOnly = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'No approval is required.')
+    .concat('\nNever send customer email.\n');
+
+  assert.equal(analyzeSkill(localOnly).status, 'ship');
+});
