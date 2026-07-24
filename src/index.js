@@ -24,8 +24,8 @@ const AFFIRMATIVE_APPROVALS = [
   /\b(?:only|solely)\s+after\b.*\b(?:approval|confirmation|permission)\b/i
 ];
 
-const RISKY_SIDE_EFFECT = /\b(?:delet(?:e|es|ed|ing)|remov(?:e|es|ed|ing)|overwrit(?:e|es|ten|ing)|destroy(?:s|ed|ing)?|eras(?:e|es|ed|ing)|publish(?:es|ed|ing)?|deploy(?:s|ed|ing)?)\b|\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i;
-const NEGATED_SIDE_EFFECT = /\b(?:do(?:es)?\s+not|must\s+not|never)\s+(?:\w+\s+){0,3}(?:delete|remove|overwrite|destroy|erase|publish|deploy|write|change|update|mutate)\b/i;
+const RISKY_SIDE_EFFECT = /\b(?:delet(?:e|es|ed|ing)|remov(?:e|es|ed|ing)|overwrit(?:e|es|ten|ing)|destroy(?:s|ed|ing)?|eras(?:e|es|ed|ing)|publish(?:es|ed|ing)?|deploy(?:s|ed|ing)?|send(?:s|ing)?|sent|email(?:s|ed|ing)?|post(?:s|ed|ing)?|message(?:s|d|ing)?)\b|\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i;
+const NEGATED_SIDE_EFFECT = /\b(?:do(?:es)?\s+not|must\s+not|never)\s+(?:\w+\s+){0,3}(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b/i;
 
 function isAffirmativeApproval(line) {
   return !APPROVAL_NEGATIONS.some((pattern) => pattern.test(line))
