@@ -23,6 +23,10 @@ skill-plan-lint check SKILL.md --markdown
 skill-plan-lint --help
 ```
 
+Directory targets are searched recursively for Markdown files. Reports use a
+deterministic path order, and a directory containing no Markdown fails instead
+of producing an empty successful report.
+
 ## Verify
 
 Run the release-readiness check before publishing or tagging:
@@ -39,7 +43,7 @@ See [SKILL.md](./SKILL.md) for when to use this package, side-effect boundaries,
 
 The default workflow is local-first. It does not call external services, read credentials, publish packages, or perform live account writes.
 
-Approval evidence must state an affirmative requirement, such as "Approval is required before deleting files." Negated statements such as "No approval is required" do not satisfy the approval check. A plan that describes destructive or live side effects without affirmative approval evidence is classified as `revise`, and `skill-plan-lint check` exits with status 1 even when its numeric score would otherwise be high enough to ship.
+Approval evidence must state an affirmative requirement, such as "Approval is required before deleting files." Negated statements such as "No approval is required" do not satisfy the approval check. A plan that describes destructive or live side effects—including sending email or messages, posting, publishing, and deploying—without affirmative approval evidence is classified as `revise`, and `skill-plan-lint check` exits with status 1 even when its numeric score would otherwise be high enough to ship.
 
 ## Limitations
 
