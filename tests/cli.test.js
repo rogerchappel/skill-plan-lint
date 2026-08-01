@@ -26,6 +26,49 @@ test('CLI rejects unknown commands with usage text', () => {
   assert.match(result.stderr, /Usage: skill-plan-lint check/);
 });
 
+test('CLI rejects unknown options', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'report', 'README.md', '--bogus'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /^Unknown option: --bogus\nUsage:/);
+});
+
+test('CLI rejects multiple targets', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'README.md', 'SKILL.md'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /^Expected at most one/);
+});
+
+test('CLI reports a missing target without a stack trace', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'does-not-exist.md'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'Target not found: does-not-exist.md\n');
+});
+
+test('CLI rejects an explicit non-Markdown file', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'package.json'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'Target must be a Markdown file or directory: package.json\n');
+});
+
 test('CLI fails a destructive skill with negated approval language', () => {
   const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'fixtures/unsafe-negated-approval.md'], {
     cwd: new URL('..', import.meta.url),
