@@ -2,6 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeSkill, renderMarkdown } from './index.js';
+
+const usage = `Usage: skill-plan-lint check [file-or-directory] [--markdown|--format=markdown]
+       skill-plan-lint report [file-or-directory] [--markdown|--format=markdown]`;
+
 function files(input) {
   const stat = fs.statSync(input);
   if (stat.isDirectory()) {
@@ -13,16 +17,54 @@ function files(input) {
         return entry.isFile() && entry.name.toLowerCase().endsWith('.md') ? [child] : [];
       });
   }
-  return [input];
+  return input.toLowerCase().endsWith('.md') ? [input] : [];
 }
-const [cmd = 'check', target = 'SKILL.md', ...rest] = process.argv.slice(2);
+
+const [cmd = 'check', ...args] = process.argv.slice(2);
 if (cmd === '--help' || cmd === '-h') {
-  console.log('Usage: skill-plan-lint check <file-or-directory> [--markdown]');
+  console.log(usage);
   process.exit(0);
 }
-const markdown = rest.includes('--format=markdown') || rest.includes('--markdown');
-if (!['check', 'report'].includes(cmd)) { console.error('Usage: skill-plan-lint check <file-or-directory> [--markdown]'); process.exit(2); }
-const reports = files(target).map((file) => analyzeSkill(fs.readFileSync(file, 'utf8'), file));
+if (!['check', 'report'].includes(cmd)) {
+  console.error(usage);
+  process.exit(2);
+}
+
+const options = args.filter((arg) => arg.startsWith('-'));
+const targets = args.filter((arg) => !arg.startsWith('-'));
+const unknown = options.filter((option) => !['--markdown', '--format=markdown'].includes(option));
+if (unknown.length > 0) {
+  console.error(`Unknown option: ${unknown[0]}`);
+  console.error(usage);
+  process.exit(2);
+}
+if (targets.length > 1) {
+  console.error('Expected at most one file or directory target');
+  console.error(usage);
+  process.exit(2);
+}
+
+const target = targets[0] ?? 'SKILL.md';
+const markdown = options.includes('--format=markdown') || options.includes('--markdown');
+let discovered;
+try {
+  discovered = files(target);
+} catch (error) {
+  const reason = error?.code === 'ENOENT' ? 'not found' : 'not readable';
+  console.error(`Target ${reason}: ${target}`);
+  process.exit(2);
+}
+if (discovered.length === 0 && fs.statSync(target).isFile()) {
+  console.error(`Target must be a Markdown file or directory: ${target}`);
+  process.exit(2);
+}
+let reports;
+try {
+  reports = discovered.map((file) => analyzeSkill(fs.readFileSync(file, 'utf8'), file));
+} catch {
+  console.error(`Target not readable: ${target}`);
+  process.exit(2);
+}
 if (reports.length === 0) {
   console.error(`No Markdown files found in ${target}`);
   process.exit(2);

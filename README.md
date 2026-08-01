@@ -14,6 +14,7 @@ npm run smoke
 
 ```bash
 node src/cli.js check fixtures/good-skill.md --markdown
+node src/cli.js report docs --format=markdown
 ```
 
 After installing the package, the same check is available through the bin:
@@ -25,7 +26,9 @@ skill-plan-lint --help
 
 Directory targets are searched recursively for Markdown files. Reports use a
 deterministic path order, and a directory containing no Markdown fails instead
-of producing an empty successful report.
+of producing an empty successful report. File targets must use a `.md`
+extension. The optional target defaults to `SKILL.md`; the only accepted output
+flags are `--markdown` and `--format=markdown`.
 
 ## Verify
 
