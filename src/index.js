@@ -24,7 +24,15 @@ const AFFIRMATIVE_APPROVALS = [
   /\b(?:only|solely)\s+after\b.*\b(?:approval|confirmation|permission)\b/i
 ];
 
-const RISKY_SIDE_EFFECT = /\b(?:delet(?:e|es|ed|ing)|remov(?:e|es|ed|ing)|overwrit(?:e|es|ten|ing)|destroy(?:s|ed|ing)?|eras(?:e|es|ed|ing)|publish(?:es|ed|ing)?|deploy(?:s|ed|ing)?|send(?:s|ing)?|sent|email(?:s|ed|ing)?|post(?:s|ed|ing)?|message(?:s|d|ing)?)\b|\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i;
+const RISKY_SIDE_EFFECTS = [
+  { id: 'delete', pattern: /\b(?:delet(?:e|es|ed|ing)|remov(?:e|es|ed|ing)|destroy(?:s|ed|ing)?|eras(?:e|es|ed|ing))\b/i },
+  { id: 'overwrite', pattern: /\boverwrit(?:e|es|ten|ing)\b/i },
+  { id: 'publish', pattern: /\bpublish(?:es|ed|ing)?\b/i },
+  { id: 'deploy', pattern: /\bdeploy(?:s|ed|ing)?\b/i },
+  { id: 'communicate', pattern: /\b(?:send(?:s|ing)?|sent|email(?:s|ed|ing)?|message(?:s|d|ing)?)\b/i },
+  { id: 'post', pattern: /\bpost(?:s|ed|ing)?\b/i },
+  { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
+];
 const NEGATED_SIDE_EFFECT = /\b(?:do(?:es)?\s+not|must\s+not|never)\s+(?:\w+\s+){0,3}(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b/i;
 
 function isAffirmativeApproval(line) {
@@ -32,8 +40,19 @@ function isAffirmativeApproval(line) {
     && AFFIRMATIVE_APPROVALS.some((pattern) => pattern.test(line));
 }
 
-function hasRiskySideEffect(lines) {
-  return lines.some((line) => RISKY_SIDE_EFFECT.test(line) && !NEGATED_SIDE_EFFECT.test(line));
+function hasScopedApproval(lines) {
+  const riskyActions = new Set();
+  const approvedActions = new Set();
+
+  for (const line of lines) {
+    for (const action of RISKY_SIDE_EFFECTS) {
+      if (!action.pattern.test(line)) continue;
+      if (!NEGATED_SIDE_EFFECT.test(line)) riskyActions.add(action.id);
+      if (isAffirmativeApproval(line)) approvedActions.add(action.id);
+    }
+  }
+
+  return [...riskyActions].every((action) => approvedActions.has(action));
 }
 
 export function analyzeSkill(text, file = '<input>') {
@@ -49,8 +68,7 @@ export function analyzeSkill(text, file = '<input>') {
     return { id: rule.id, label: rule.label, weight: rule.weight, passed: evidence.length > 0, evidence };
   });
   const score = checks.filter((check) => check.passed).reduce((sum, check) => sum + check.weight, 0);
-  const approvalPassed = checks.find((check) => check.id === 'approval').passed;
-  const unsafeWithoutApproval = hasRiskySideEffect(lines) && !approvalPassed;
+  const unsafeWithoutApproval = !hasScopedApproval(lines);
   const status = unsafeWithoutApproval ? 'revise' : score >= 85 ? 'ship' : score >= 60 ? 'incubate' : 'revise';
   return { file, score, status, checks };
 }
