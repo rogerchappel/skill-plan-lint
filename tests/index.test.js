@@ -65,3 +65,39 @@ test('does not treat explicitly prohibited external actions as side effects', ()
 
   assert.equal(analyzeSkill(localOnly).status, 'ship');
 });
+
+test('does not let approval for an unrelated action authorize email', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+    .concat('\nSide effects: send an email immediately.\n');
+
+  const report = analyzeSkill(skill);
+
+  assert.equal(report.score, 100);
+  assert.equal(report.status, 'revise');
+});
+
+test('accepts approval evidence paired with the risky action', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before sending email.');
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
+
+test('requires scoped approval for every risky action', () => {
+  const mixedApproval = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+    .concat('\nSide effects: delete files and deploy the release.\n');
+  const completeApproval = mixedApproval.concat('\nObtain confirmation before deploying the release.\n');
+
+  assert.equal(analyzeSkill(mixedApproval).status, 'revise');
+  assert.equal(analyzeSkill(completeApproval).status, 'ship');
+});
+
+test('keeps negated and prohibited actions out of scoped approval', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+    .concat('\nNever send customer email or deploy a release.\n');
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
