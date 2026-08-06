@@ -30,6 +30,23 @@ of producing an empty successful report. File targets must use a `.md`
 extension. The optional target defaults to `SKILL.md`; the only accepted output
 flags are `--markdown` and `--format=markdown`.
 
+## Scoring and status
+
+The seven checks are required gates as well as weighted score components:
+when to use (15), inputs and tools (15), side-effect boundaries (15), approval
+requirements (15), examples (10), validation workflow (15), and limitations
+and fallback (15), for 100 points total.
+
+- `ship`: score at least 85, every required check passes, and every risky side
+  effect has affirmative, action-scoped approval. Because all current checks
+  are required, a complete plan scores 100.
+- `incubate`: score at least 60, but one or more required checks are missing.
+- `revise`: score below 60, or a risky side effect lacks action-scoped
+  approval regardless of score.
+
+The `check` command exits 0 only when every report is `ship`; both `incubate`
+and `revise` reports exit 1. The `report` command remains informational.
+
 ## Verify
 
 Run the release-readiness check before publishing or tagging:
