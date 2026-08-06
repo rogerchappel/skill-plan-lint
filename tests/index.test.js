@@ -11,7 +11,7 @@ test('requires every declared required check before shipping', () => {
 
   for (const [section, expectedScore] of [
     ['Approval is required before applying or rejecting a proposal.', 85],
-    ['## Examples', 90]
+    ['## Examples\nRun `skill-plan-lint check SKILL.md`.', 90]
   ]) {
     const report = analyzeSkill(complete.replace(section, ''));
 
@@ -72,12 +72,12 @@ test('requires approval for live external communication actions', () => {
   }
 });
 
-test('does not treat explicitly prohibited external actions as side effects', () => {
+test('still requires approval evidence when external actions are prohibited', () => {
   const localOnly = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'No approval is required.')
     .concat('\nNever send customer email.\n');
 
-  assert.equal(analyzeSkill(localOnly).status, 'ship');
+  assert.equal(analyzeSkill(localOnly).status, 'incubate');
 });
 
 test('does not let approval for an unrelated action authorize email', () => {

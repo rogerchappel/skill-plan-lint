@@ -71,4 +71,4 @@ if (reports.length === 0) {
 }
 if (markdown || cmd === 'report') console.log(reports.map(renderMarkdown).join('\n'));
 else console.log(JSON.stringify(reports.length === 1 ? reports[0] : reports, null, 2));
-if (cmd === 'check' && reports.some((report) => report.status === 'revise')) process.exit(1);
+if (cmd === 'check' && reports.some((report) => report.status !== 'ship')) process.exit(1);
