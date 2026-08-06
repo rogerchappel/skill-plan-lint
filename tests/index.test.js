@@ -115,3 +115,27 @@ test('keeps negated and prohibited actions out of scoped approval', () => {
 
   assert.equal(analyzeSkill(skill).status, 'ship');
 });
+
+test('does not let same-line approval authorize a later sentence', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files. Send a customer email.');
+
+  assert.equal(analyzeSkill(skill).status, 'revise');
+});
+
+test('accepts same-line actions when each statement has scoped approval', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files. Obtain confirmation before sending customer email.');
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
+
+test('scopes approval negations and prohibited actions to their statements', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is not required for local reads. Approval is required before deleting files.')
+    .concat('\nNever send customer email. Deploy the release.\n');
+  const report = analyzeSkill(skill);
+
+  assert.equal(report.checks.find((check) => check.id === 'approval').passed, true);
+  assert.equal(report.status, 'revise');
+});
