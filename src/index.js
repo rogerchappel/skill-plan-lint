@@ -40,15 +40,22 @@ function isAffirmativeApproval(line) {
     && AFFIRMATIVE_APPROVALS.some((pattern) => pattern.test(line));
 }
 
-function hasScopedApproval(lines) {
+function statements(lines) {
+  return lines.flatMap((line, index) => line
+    .split(/(?<=[.!?])\s+/)
+    .filter((text) => text.trim())
+    .map((text) => ({ line: index + 1, text })));
+}
+
+function hasScopedApproval(parts) {
   const riskyActions = new Set();
   const approvedActions = new Set();
 
-  for (const line of lines) {
+  for (const { text } of parts) {
     for (const action of RISKY_SIDE_EFFECTS) {
-      if (!action.pattern.test(line)) continue;
-      if (!NEGATED_SIDE_EFFECT.test(line)) riskyActions.add(action.id);
-      if (isAffirmativeApproval(line)) approvedActions.add(action.id);
+      if (!action.pattern.test(text)) continue;
+      if (!NEGATED_SIDE_EFFECT.test(text)) riskyActions.add(action.id);
+      if (isAffirmativeApproval(text)) approvedActions.add(action.id);
     }
   }
 
@@ -57,19 +64,20 @@ function hasScopedApproval(lines) {
 
 export function analyzeSkill(text, file = '<input>') {
   const lines = String(text || '').split(/\r?\n/);
+  const parts = statements(lines);
   const checks = REQUIRED.map((rule) => {
     const evidence = [];
-    lines.forEach((line, index) => {
+    parts.forEach(({ line, text: statement }) => {
       const matches = rule.id === 'approval'
-        ? isAffirmativeApproval(line)
-        : rule.patterns.some((pattern) => pattern.test(line));
-      if (matches) evidence.push({ line: index + 1, text: line.trim().slice(0, 160) });
+        ? isAffirmativeApproval(statement)
+        : rule.patterns.some((pattern) => pattern.test(statement));
+      if (matches) evidence.push({ line, text: statement.trim().slice(0, 160) });
     });
     return { id: rule.id, label: rule.label, weight: rule.weight, passed: evidence.length > 0, evidence };
   });
   const score = checks.filter((check) => check.passed).reduce((sum, check) => sum + check.weight, 0);
   const allRequiredChecksPassed = checks.every((check) => check.passed);
-  const unsafeWithoutApproval = !hasScopedApproval(lines);
+  const unsafeWithoutApproval = !hasScopedApproval(parts);
   const status = unsafeWithoutApproval
     ? 'revise'
     : score >= 85 && allRequiredChecksPassed
