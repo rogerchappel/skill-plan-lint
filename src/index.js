@@ -68,8 +68,15 @@ export function analyzeSkill(text, file = '<input>') {
     return { id: rule.id, label: rule.label, weight: rule.weight, passed: evidence.length > 0, evidence };
   });
   const score = checks.filter((check) => check.passed).reduce((sum, check) => sum + check.weight, 0);
+  const allRequiredChecksPassed = checks.every((check) => check.passed);
   const unsafeWithoutApproval = !hasScopedApproval(lines);
-  const status = unsafeWithoutApproval ? 'revise' : score >= 85 ? 'ship' : score >= 60 ? 'incubate' : 'revise';
+  const status = unsafeWithoutApproval
+    ? 'revise'
+    : score >= 85 && allRequiredChecksPassed
+      ? 'ship'
+      : score >= 60
+        ? 'incubate'
+        : 'revise';
   return { file, score, status, checks };
 }
 export function renderMarkdown(report) {
