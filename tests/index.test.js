@@ -6,6 +6,20 @@ test('scores complete skill as ship', () => { const report = analyzeSkill(fs.rea
 test('flags missing operational sections', () => { const report = analyzeSkill('# Tiny Skill\n\nUse this sometimes.'); assert.equal(report.status, 'revise'); assert.ok(report.checks.some((check) => !check.passed && check.id === 'approval')); });
 test('renders markdown evidence table', () => { assert.match(renderMarkdown(analyzeSkill('## When to use\nExample `x`')), /Evidence line/); });
 
+test('requires every declared required check before shipping', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+
+  for (const [section, expectedScore] of [
+    ['Approval is required before applying or rejecting a proposal.', 85],
+    ['## Examples', 90]
+  ]) {
+    const report = analyzeSkill(complete.replace(section, ''));
+
+    assert.equal(report.score, expectedScore, section);
+    assert.equal(report.status, 'incubate', section);
+  }
+});
+
 test('blocks destructive skills whose approval language is only negated', () => {
   const report = analyzeSkill(fs.readFileSync('fixtures/unsafe-negated-approval.md', 'utf8'));
   const approval = report.checks.find((check) => check.id === 'approval');
