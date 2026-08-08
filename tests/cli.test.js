@@ -136,6 +136,28 @@ test('CLI fails an unapproved action in a later sentence on the same line', (t) 
   assert.equal(JSON.parse(result.stdout).status, 'revise');
 });
 
+test('CLI fails unapproved actions after contrastive and semicolon clauses', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-clauses-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const complete = fs.readFileSync(new URL('../fixtures/good-skill.md', import.meta.url), 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before sending email.');
+
+  for (const [name, sideEffects] of [
+    ['but.md', 'Never send customer email but deploy a release.'],
+    ['semicolon.md', 'Never send customer email; deploy a release.']
+  ]) {
+    const fixture = path.join(directory, name);
+    fs.writeFileSync(fixture, `${complete}\n${sideEffects}\n`);
+    const result = spawnSync(process.execPath, ['src/cli.js', 'check', fixture], {
+      cwd: new URL('..', import.meta.url),
+      encoding: 'utf8'
+    });
+
+    assert.equal(result.status, 1, sideEffects);
+    assert.equal(JSON.parse(result.stdout).status, 'revise', sideEffects);
+  }
+});
+
 test('CLI recursively reports nested Markdown in deterministic order', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
