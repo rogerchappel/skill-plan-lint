@@ -139,3 +139,26 @@ test('scopes approval negations and prohibited actions to their statements', () 
   assert.equal(report.checks.find((check) => check.id === 'approval').passed, true);
   assert.equal(report.status, 'revise');
 });
+
+test('scopes prohibited actions to contrastive and semicolon clauses', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before sending email.');
+
+  for (const sideEffects of [
+    'Never send customer email but deploy a release.',
+    'Never send customer email; deploy a release.'
+  ]) {
+    const report = analyzeSkill(`${complete}\n${sideEffects}\n`);
+
+    assert.equal(report.score, 100, sideEffects);
+    assert.equal(report.status, 'revise', sideEffects);
+  }
+});
+
+test('keeps coordinated actions under a shared prohibition', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+    .concat('\nNever send customer email or deploy a release.\n');
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
