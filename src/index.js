@@ -40,11 +40,14 @@ function isAffirmativeApproval(line) {
     && AFFIRMATIVE_APPROVALS.some((pattern) => pattern.test(line));
 }
 
-function statements(lines) {
+function clauses(lines) {
   return lines.flatMap((line, index) => line
     .split(/(?<=[.!?])\s+/)
     .filter((text) => text.trim())
-    .map((text) => ({ line: index + 1, text })));
+    .flatMap((statement) => statement
+      .split(/\s*;\s*|\s+but\s+/i)
+      .filter((text) => text.trim())
+      .map((text) => ({ line: index + 1, text }))));
 }
 
 function hasScopedApproval(parts) {
@@ -64,7 +67,7 @@ function hasScopedApproval(parts) {
 
 export function analyzeSkill(text, file = '<input>') {
   const lines = String(text || '').split(/\r?\n/);
-  const parts = statements(lines);
+  const parts = clauses(lines);
   const checks = REQUIRED.map((rule) => {
     const evidence = [];
     parts.forEach(({ line, text: statement }) => {
