@@ -13,6 +13,8 @@
   "files": [
     "src",
     "fixtures",
+    "scripts",
+    "tests",
     "docs",
     "SKILL.md",
     "README.md",
@@ -23,7 +25,7 @@
     "check": "node --check src/index.js && node --check src/cli.js && node --check tests/*.test.js",
     "build": "mkdir -p dist && cp -R src dist/src",
     "smoke": "node src/cli.js --help && node src/cli.js check fixtures/good-skill.md > /tmp/skill-plan-lint-smoke.txt",
-    "package:smoke": "npm pack --dry-run",
+    "package:smoke": "bash scripts/package-smoke.sh",
     "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke"
   },
   "keywords": [
