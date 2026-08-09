@@ -23,7 +23,9 @@ Ask for explicit approval before using lint output to apply, reject, quarantine,
 
 ## Validation
 
-Run `npm test`, `npm run smoke`, and `bash scripts/validate.sh` before trusting a packaged release.
+Run `npm run release:check` before trusting a packaged release. It executes the
+project checks and validates the documented workflow from a cleanly extracted
+package artifact.
 
 ## Limitations
 
