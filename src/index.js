@@ -34,6 +34,7 @@ const RISKY_SIDE_EFFECTS = [
   { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
 ];
 const NEGATED_SIDE_EFFECT = /\b(?:do(?:es)?\s+not|must\s+not|never)\s+(?:\w+\s+){0,3}(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b/i;
+const CLAUSE_BOUNDARY = /\s*;\s*|\s+but\s+|,\s+(?=(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b)/i;
 
 function isAffirmativeApproval(line) {
   return !APPROVAL_NEGATIONS.some((pattern) => pattern.test(line))
@@ -45,7 +46,7 @@ function clauses(lines) {
     .split(/(?<=[.!?])\s+/)
     .filter((text) => text.trim())
     .flatMap((statement) => statement
-      .split(/\s*;\s*|\s+but\s+/i)
+      .split(CLAUSE_BOUNDARY)
       .filter((text) => text.trim())
       .map((text) => ({ line: index + 1, text }))));
 }
