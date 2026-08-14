@@ -162,3 +162,11 @@ test('keeps coordinated actions under a shared prohibition', () => {
 
   assert.equal(analyzeSkill(skill).status, 'ship');
 });
+
+test('scopes a prohibition before a comma to its action', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before publishing reports.')
+    .concat('\nNever publish reports, delete live records automatically.\n');
+
+  assert.equal(analyzeSkill(skill).status, 'revise');
+});
