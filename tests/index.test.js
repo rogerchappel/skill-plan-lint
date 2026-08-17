@@ -170,3 +170,25 @@ test('scopes a prohibition before a comma to its action', () => {
 
   assert.equal(analyzeSkill(skill).status, 'revise');
 });
+
+test('scopes comma-separated actions introduced by transition words', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+
+  for (const approval of [
+    'Approval is required before deleting files, then deploy automatically.',
+    'Approval is required before deleting files, next publish the report.'
+  ]) {
+    const skill = complete.replace('Approval is required before applying or rejecting a proposal.', approval);
+    assert.equal(analyzeSkill(skill).status, 'revise', approval);
+  }
+});
+
+test('keeps explicitly coordinated follow-on actions in one scope', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace(
+      'Approval is required before applying or rejecting a proposal.',
+      'Approval is required before deleting files and then deploying automatically.'
+    );
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
