@@ -130,6 +130,21 @@ test('accepts same-line actions when each statement has scoped approval', () => 
   assert.equal(analyzeSkill(skill).status, 'ship');
 });
 
+test('requires approval for each repeated action occurrence', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const partiallyApproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Send a customer email automatically. Approval is required before sending a different customer email.'
+  );
+  const independentlyApproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Approval is required before sending a customer email. Obtain confirmation before messaging another customer.'
+  );
+
+  assert.equal(analyzeSkill(partiallyApproved).status, 'revise');
+  assert.equal(analyzeSkill(independentlyApproved).status, 'ship');
+});
+
 test('scopes approval negations and prohibited actions to their statements', () => {
   const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'Approval is not required for local reads. Approval is required before deleting files.')
