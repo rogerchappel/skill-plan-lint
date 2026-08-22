@@ -102,7 +102,10 @@ test('requires scoped approval for every risky action', () => {
   const mixedApproval = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
     .concat('\nSide effects: delete files and deploy the release.\n');
-  const completeApproval = mixedApproval.concat('\nObtain confirmation before deploying the release.\n');
+  const completeApproval = mixedApproval.replace(
+    'Side effects: delete files and deploy the release.',
+    'Side effects: obtain confirmation before deleting files and deploying the release.'
+  );
 
   assert.equal(analyzeSkill(mixedApproval).status, 'revise');
   assert.equal(analyzeSkill(completeApproval).status, 'ship');
