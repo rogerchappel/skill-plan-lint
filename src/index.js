@@ -52,18 +52,11 @@ function clauses(lines) {
 }
 
 function hasScopedApproval(parts) {
-  const riskyActions = new Set();
-  const approvedActions = new Set();
-
-  for (const { text } of parts) {
-    for (const action of RISKY_SIDE_EFFECTS) {
-      if (!action.pattern.test(text)) continue;
-      if (!NEGATED_SIDE_EFFECT.test(text)) riskyActions.add(action.id);
-      if (isAffirmativeApproval(text)) approvedActions.add(action.id);
-    }
-  }
-
-  return [...riskyActions].every((action) => approvedActions.has(action));
+  return parts.every(({ text }) => {
+    const hasRiskyAction = RISKY_SIDE_EFFECTS.some((action) => action.pattern.test(text));
+    const requiresApproval = hasRiskyAction && !NEGATED_SIDE_EFFECT.test(text);
+    return !requiresApproval || isAffirmativeApproval(text);
+  });
 }
 
 export function analyzeSkill(text, file = '<input>') {

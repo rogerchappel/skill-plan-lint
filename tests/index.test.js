@@ -102,7 +102,10 @@ test('requires scoped approval for every risky action', () => {
   const mixedApproval = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
     .concat('\nSide effects: delete files and deploy the release.\n');
-  const completeApproval = mixedApproval.concat('\nObtain confirmation before deploying the release.\n');
+  const completeApproval = mixedApproval.replace(
+    'Side effects: delete files and deploy the release.',
+    'Side effects: obtain confirmation before deleting files and deploying the release.'
+  );
 
   assert.equal(analyzeSkill(mixedApproval).status, 'revise');
   assert.equal(analyzeSkill(completeApproval).status, 'ship');
@@ -128,6 +131,21 @@ test('accepts same-line actions when each statement has scoped approval', () => 
     .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files. Obtain confirmation before sending customer email.');
 
   assert.equal(analyzeSkill(skill).status, 'ship');
+});
+
+test('requires approval for each repeated action occurrence', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const partiallyApproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Send a customer email automatically. Approval is required before sending a different customer email.'
+  );
+  const independentlyApproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Approval is required before sending a customer email. Obtain confirmation before messaging another customer.'
+  );
+
+  assert.equal(analyzeSkill(partiallyApproved).status, 'revise');
+  assert.equal(analyzeSkill(independentlyApproved).status, 'ship');
 });
 
 test('scopes approval negations and prohibited actions to their statements', () => {

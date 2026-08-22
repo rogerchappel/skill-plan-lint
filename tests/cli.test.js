@@ -136,6 +136,26 @@ test('CLI fails an unapproved action in a later sentence on the same line', (t) 
   assert.equal(JSON.parse(result.stdout).status, 'revise');
 });
 
+test('CLI fails an unapproved communication before an approved repeat', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-repeated-actions-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const fixture = path.join(directory, 'partially-approved-email.md');
+  const skill = fs.readFileSync(new URL('../fixtures/good-skill.md', import.meta.url), 'utf8')
+    .replace(
+      'Approval is required before applying or rejecting a proposal.',
+      'Send a customer email automatically. Approval is required before sending a different customer email.'
+    );
+  fs.writeFileSync(fixture, skill);
+
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', fixture], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(JSON.parse(result.stdout).status, 'revise');
+});
+
 test('CLI fails unapproved actions after contrastive and semicolon clauses', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-clauses-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
