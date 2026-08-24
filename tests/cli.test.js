@@ -216,6 +216,23 @@ test('CLI fails an unapproved action after a comma-separated prohibition', (t) =
   assert.equal(JSON.parse(result.stdout).status, 'revise');
 });
 
+test('CLI accepts realistic coordinated side-effect prohibitions', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-prohibitions-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const fixture = path.join(directory, 'local-only.md');
+  const skill = fs.readFileSync(new URL('../fixtures/good-skill.md', import.meta.url), 'utf8')
+    .concat('\nThis tool does not contact external services or ever publish packages.\n');
+  fs.writeFileSync(fixture, skill);
+
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', fixture], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(JSON.parse(result.stdout).status, 'ship');
+});
+
 test('CLI recursively reports nested Markdown in deterministic order', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));

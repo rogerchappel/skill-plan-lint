@@ -181,6 +181,21 @@ test('keeps coordinated actions under a shared prohibition', () => {
   assert.equal(analyzeSkill(skill).status, 'ship');
 });
 
+test('recognizes long-form coordinated side-effect prohibitions', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const skill = complete.concat('\nThis tool does not contact external services or ever publish packages.\n');
+
+  assert.equal(analyzeSkill(skill).status, 'ship');
+});
+
+test('does not let a later prohibition hide an affirmative risky action', () => {
+  const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
+    .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+    .concat('\nPublish packages and never deploy releases.\n');
+
+  assert.equal(analyzeSkill(skill).status, 'revise');
+});
+
 test('scopes a prohibition before a comma to its action', () => {
   const skill = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before publishing reports.')
