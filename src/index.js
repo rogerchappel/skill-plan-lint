@@ -33,7 +33,7 @@ const RISKY_SIDE_EFFECTS = [
   { id: 'post', pattern: /\bpost(?:s|ed|ing)?\b/i },
   { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
 ];
-const NEGATED_SIDE_EFFECT = /\b(?:do(?:es)?\s+not|must\s+not|never)\s+(?:\w+\s+){0,3}(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b/i;
+const SIDE_EFFECT_NEGATION = /\b(?:do(?:es)?\s+not|must\s+not|never)\b(?:\s+[\w'-]+){0,12}\s*$/i;
 const CLAUSE_BOUNDARY = /\s*;\s*|\s+but\s+|,\s+(?=(?:(?:then|next|afterwards|subsequently|finally)\s+)?(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b)/i;
 
 function isAffirmativeApproval(line) {
@@ -53,8 +53,10 @@ function clauses(lines) {
 
 function hasScopedApproval(parts) {
   return parts.every(({ text }) => {
-    const hasRiskyAction = RISKY_SIDE_EFFECTS.some((action) => action.pattern.test(text));
-    const requiresApproval = hasRiskyAction && !NEGATED_SIDE_EFFECT.test(text);
+    const requiresApproval = RISKY_SIDE_EFFECTS.some((action) => {
+      const matches = text.matchAll(new RegExp(action.pattern.source, `${action.pattern.flags}g`));
+      return [...matches].some((match) => !SIDE_EFFECT_NEGATION.test(text.slice(0, match.index)));
+    });
     return !requiresApproval || isAffirmativeApproval(text);
   });
 }
