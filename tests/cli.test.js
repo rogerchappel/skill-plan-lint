@@ -156,6 +156,37 @@ test('CLI fails an unapproved communication before an approved repeat', (t) => {
   assert.equal(JSON.parse(result.stdout).status, 'revise');
 });
 
+test('CLI accepts a complete skill that inspects error messages', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'fixtures/non-action-message.md'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(JSON.parse(result.stdout).status, 'ship');
+});
+
+test('CLI rejects direct email and message actions without scoped approval', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-communication-actions-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const complete = fs.readFileSync(new URL('../fixtures/good-skill.md', import.meta.url), 'utf8');
+
+  for (const [name, action] of [['email.md', 'Email the customer.'], ['message.md', 'Message the customer.']]) {
+    const fixture = path.join(directory, name);
+    const skill = complete
+      .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+      .concat(`\n${action}\n`);
+    fs.writeFileSync(fixture, skill);
+    const result = spawnSync(process.execPath, ['src/cli.js', 'check', fixture], {
+      cwd: new URL('..', import.meta.url),
+      encoding: 'utf8'
+    });
+
+    assert.equal(result.status, 1, action);
+    assert.equal(JSON.parse(result.stdout).status, 'revise', action);
+  }
+});
+
 test('CLI fails unapproved actions after contrastive and semicolon clauses', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-clauses-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
