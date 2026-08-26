@@ -29,7 +29,10 @@ const RISKY_SIDE_EFFECTS = [
   { id: 'overwrite', pattern: /\boverwrit(?:e|es|ten|ing)\b/i },
   { id: 'publish', pattern: /\bpublish(?:es|ed|ing)?\b/i },
   { id: 'deploy', pattern: /\bdeploy(?:s|ed|ing)?\b/i },
-  { id: 'communicate', pattern: /\b(?:send(?:s|ing)?|sent|email(?:s|ed|ing)?|message(?:s|d|ing)?)\b/i },
+  { id: 'communicate', pattern: /\b(?:send(?:s|ing)?|sent|emailed|emailing|messaged|messaging)\b/i },
+  { id: 'communicate', pattern: /^\s*(?:email|message)\b/i },
+  { id: 'communicate', pattern: /\b(?:can|could|may|might|must|should|will|would|to)\s+(?:email|message)\b/i },
+  { id: 'communicate', pattern: /\b(?:agent|it|skill|tool)\s+(?:emails|messages)\b/i },
   { id: 'post', pattern: /\bpost(?:s|ed|ing)?\b/i },
   { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
 ];
