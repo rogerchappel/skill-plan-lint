@@ -72,6 +72,25 @@ test('requires approval for live external communication actions', () => {
   }
 });
 
+test('does not treat message nouns as external communication actions', () => {
+  const report = analyzeSkill(fs.readFileSync('fixtures/non-action-message.md', 'utf8'));
+
+  assert.equal(report.score, 100);
+  assert.equal(report.status, 'ship');
+});
+
+test('still requires approval for direct email and message actions', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+
+  for (const action of ['Email the customer.', 'Message the customer.']) {
+    const skill = complete
+      .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+      .concat(`\n${action}\n`);
+
+    assert.equal(analyzeSkill(skill).status, 'revise', action);
+  }
+});
+
 test('still requires approval evidence when external actions are prohibited', () => {
   const localOnly = fs.readFileSync('fixtures/good-skill.md', 'utf8')
     .replace('Approval is required before applying or rejecting a proposal.', 'No approval is required.')
