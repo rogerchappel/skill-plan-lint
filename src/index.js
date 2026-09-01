@@ -37,6 +37,7 @@ const RISKY_SIDE_EFFECTS = [
   { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
 ];
 const SIDE_EFFECT_NEGATION = /\b(?:do(?:es)?\s+not|must\s+not|never)\b(?:\s+[\w'-]+){0,12}\s*$/i;
+const TEMPORAL_SCOPE_BOUNDARY = /\b(?:after|before|once|until|when|while)\b/i;
 const CLAUSE_BOUNDARY = /\s*;\s*|\s+but\s+|,\s+(?=(?:(?:then|next|afterwards|subsequently|finally)\s+)?(?:delete|remove|overwrite|destroy|erase|publish|deploy|send|email|post|message|write|change|update|mutate)\b)/i;
 
 function isAffirmativeApproval(line) {
@@ -58,7 +59,11 @@ function hasScopedApproval(parts) {
   return parts.every(({ text }) => {
     const requiresApproval = RISKY_SIDE_EFFECTS.some((action) => {
       const matches = text.matchAll(new RegExp(action.pattern.source, `${action.pattern.flags}g`));
-      return [...matches].some((match) => !SIDE_EFFECT_NEGATION.test(text.slice(0, match.index)));
+      return [...matches].some((match) => {
+        const prefix = text.slice(0, match.index);
+        const negation = prefix.match(SIDE_EFFECT_NEGATION);
+        return !negation || TEMPORAL_SCOPE_BOUNDARY.test(negation[0]);
+      });
     });
     return !requiresApproval || isAffirmativeApproval(text);
   });
