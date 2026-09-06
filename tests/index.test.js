@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { analyzeSkill, renderMarkdown } from '../src/index.js';
 test('scores complete skill as ship', () => { const report = analyzeSkill(fs.readFileSync('fixtures/good-skill.md', 'utf8')); assert.equal(report.status, 'ship'); assert.equal(report.score, 100); });
 test('flags missing operational sections', () => { const report = analyzeSkill('# Tiny Skill\n\nUse this sometimes.'); assert.equal(report.status, 'revise'); assert.ok(report.checks.some((check) => !check.passed && check.id === 'approval')); });
@@ -253,4 +254,49 @@ test('keeps explicitly coordinated follow-on actions in one scope', () => {
     );
 
   assert.equal(analyzeSkill(skill).status, 'ship');
+});
+
+test('requires approval for merge and charge action forms', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const forms = [
+    'merge the pull request',
+    'merges the pull request',
+    'merging the pull request',
+    'merged the pull request',
+    'charge the account',
+    'charges the account',
+    'charging the account',
+    'charged the account'
+  ];
+
+  for (const action of forms) {
+    const skill = complete
+      .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+      .concat(`\n${action}.\n`);
+    assert.equal(analyzeSkill(skill).status, 'revise', action);
+  }
+});
+
+test('handles prohibited, approved, coordinated, and separately scoped merge and charge actions', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const replaceApproval = (statement) => complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    statement
+  );
+
+  assert.equal(analyzeSkill(`${complete}\nNever merge pull requests or charge accounts.\n`).status, 'ship');
+  assert.equal(analyzeSkill(replaceApproval('Obtain confirmation before merging the pull request.')).status, 'ship');
+  assert.equal(analyzeSkill(replaceApproval('Approval is required before merging the pull request and charging the account.')).status, 'ship');
+  assert.equal(analyzeSkill(replaceApproval('Approval is required before merging the pull request. Charge the account.')).status, 'revise');
+  assert.equal(analyzeSkill(replaceApproval('Approval is required before charging the account; merge the pull request.')).status, 'revise');
+});
+
+test('check CLI rejects the unsafe merge and charge fixture', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'fixtures/unsafe-merge-charge.md'], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, '');
+  assert.equal(JSON.parse(result.stdout).status, 'revise');
 });

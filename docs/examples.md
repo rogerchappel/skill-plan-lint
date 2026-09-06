@@ -23,3 +23,13 @@ not also approve deployment.
 ```text
 Never publish reports or delete live records automatically.
 ```
+
+Merging pull requests and charging accounts are also live side effects. One
+affirmative requirement may govern coordinated actions in the same clause:
+
+```text
+Approval is required before merging the pull request and charging the account.
+```
+
+Separate scopes need separate approval. For example, `Approval is required
+before merging the pull request. Charge the account.` returns `revise`.
