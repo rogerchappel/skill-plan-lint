@@ -35,7 +35,7 @@ const RISKY_SIDE_EFFECTS = [
   { id: 'communicate', pattern: /^\s*(?:email|message)\b/i },
   { id: 'communicate', pattern: /\b(?:can|could|may|might|must|should|will|would|to)\s+(?:email|message)\b/i },
   { id: 'communicate', pattern: /\b(?:agent|it|skill|tool)\s+(?:emails|messages)\b/i },
-  { id: 'post', pattern: /\bpost(?:s|ed|ing)?\b/i },
+  { id: 'post', pattern: /(?<![\w-])post(?:s|ed|ing)?(?![\w-])/i },
   { id: 'live-write', pattern: /\blive\s+(?:write|writes|change|changes|update|updates|mutation|mutations)\b|\b(?:write|change|update|mutate)(?:s|d|ing)?\s+(?:a\s+)?live\b/i }
 ];
 const SIDE_EFFECT_NEGATION = /\b(?:do(?:es)?\s+not|must\s+not|never)\b(?:\s+[\w'-]+){0,12}\s*$/i;
