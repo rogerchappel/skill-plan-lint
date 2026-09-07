@@ -73,6 +73,36 @@ test('requires approval for live external communication actions', () => {
   }
 });
 
+test('does not treat harmless hyphenated post compounds as posting actions', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+
+  for (const compound of ['post-processing', 'post-production', 'pre-post review']) {
+    const skill = complete.concat(`\nApply ${compound} locally.\n`);
+    assert.equal(analyzeSkill(skill).status, 'ship', compound);
+  }
+});
+
+test('still requires approval for post action inflections', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+
+  for (const action of ['post', 'posts', 'posted', 'posting']) {
+    const skill = complete
+      .replace('Approval is required before applying or rejecting a proposal.', 'Approval is required before deleting files.')
+      .concat(`\nThe tool ${action} the result externally.\n`);
+    assert.equal(analyzeSkill(skill).status, 'revise', action);
+  }
+});
+
+test('check CLI accepts a complete skill with harmless post-processing', () => {
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', 'fixtures/harmless-post-compounds.md'], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+  assert.equal(JSON.parse(result.stdout).status, 'ship');
+});
+
 test('does not treat message nouns as external communication actions', () => {
   const report = analyzeSkill(fs.readFileSync('fixtures/non-action-message.md', 'utf8'));
 
