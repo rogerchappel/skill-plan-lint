@@ -286,6 +286,26 @@ test('keeps explicitly coordinated follow-on actions in one scope', () => {
   assert.equal(analyzeSkill(skill).status, 'ship');
 });
 
+test('does not extend action approval across a coordinated subject clause', () => {
+  const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
+  const unapproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Approval is required before deleting files, and the tool may email users.'
+  );
+  const coordinated = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Approval is required before deleting files and emailing users.'
+  );
+  const independentlyApproved = complete.replace(
+    'Approval is required before applying or rejecting a proposal.',
+    'Approval is required before deleting files, and the tool may email users only after receiving approval.'
+  );
+
+  assert.equal(analyzeSkill(unapproved).status, 'revise');
+  assert.equal(analyzeSkill(coordinated).status, 'ship');
+  assert.equal(analyzeSkill(independentlyApproved).status, 'ship');
+});
+
 test('requires approval for merge and charge action forms', () => {
   const complete = fs.readFileSync('fixtures/good-skill.md', 'utf8');
   const forms = [

@@ -229,6 +229,26 @@ test('CLI fails an unapproved action after a comma transition', (t) => {
   assert.equal(JSON.parse(result.stdout).status, 'revise');
 });
 
+test('CLI fails an unapproved action in a coordinated subject clause', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-coordinated-subject-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const fixture = path.join(directory, 'coordinated-subject.md');
+  const skill = fs.readFileSync(new URL('../fixtures/good-skill.md', import.meta.url), 'utf8')
+    .replace(
+      'Approval is required before applying or rejecting a proposal.',
+      'Approval is required before deleting files, and the tool may email users.'
+    );
+  fs.writeFileSync(fixture, skill);
+
+  const result = spawnSync(process.execPath, ['src/cli.js', 'check', fixture], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(JSON.parse(result.stdout).status, 'revise');
+});
+
 test('CLI fails an unapproved action after a comma-separated prohibition', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-plan-lint-commas-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
