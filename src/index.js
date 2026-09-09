@@ -40,7 +40,7 @@ const RISKY_SIDE_EFFECTS = [
 ];
 const SIDE_EFFECT_NEGATION = /\b(?:do(?:es)?\s+not|must\s+not|never)\b(?:\s+[\w'-]+){0,12}\s*$/i;
 const TEMPORAL_SCOPE_BOUNDARY = /\b(?:after|before|once|until|when|while)\b/i;
-const CLAUSE_BOUNDARY = /\s*;\s*|\s+but\s+|,\s+(?=(?:(?:then|next|afterwards|subsequently|finally)\s+)?(?:delete|remove|overwrite|destroy|erase|publish|deploy|merge|charge|send|email|post|message|write|change|update|mutate)\b)/i;
+const CLAUSE_BOUNDARY = /\s*;\s*|\s+but\s+|,\s+(?=(?:(?:then|next|afterwards|subsequently|finally)\s+)?(?:delete|remove|overwrite|destroy|erase|publish|deploy|merge|charge|send|email|post|message|write|change|update|mutate)\b|(?:and|or)\s+(?:the\s+)?(?:agent|it|skill|tool)\s+(?:(?:can|could|may|might|must|should|will|would)\s+)?(?:delete|remove|overwrite|destroy|erase|publish|deploy|merge|charge|send|email|post|message|write|change|update|mutate)\b)/i;
 
 function isAffirmativeApproval(line) {
   return !APPROVAL_NEGATIONS.some((pattern) => pattern.test(line))

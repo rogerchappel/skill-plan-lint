@@ -20,6 +20,11 @@ The same boundary applies when a supported transition introduces the action,
 as in `Delete files, then deploy automatically.` The approval for deletion does
 not also approve deployment.
 
+A comma-coordinated clause with its own agent subject is separate too:
+`Approval is required before deleting files, and the tool may email users.`
+returns `revise`. Directly coordinated actions can share approval, as in
+`Approval is required before deleting files and emailing users.`
+
 ```text
 Never publish reports or delete live records automatically.
 ```
